@@ -3,173 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>StockFlow Pro - Final Fix</title>
+    <title>StockFlow User</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .active-tab-desk { background: #6366f1; color: white !important; }
-        .active-tab-mob { color: #6366f1 !important; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .active-tab { color: #6366f1 !important; border-top: 3px solid #6366f1; }
     </style>
 </head>
-<body class="text-slate-800 pb-24 md:pb-0">
-    <div class="flex flex-col md:flex-row h-screen overflow-hidden">
-        <aside class="hidden md:flex w-72 bg-[#0b1437] text-white flex-col shadow-2xl">
-            <div class="p-8 border-b border-white/5 flex items-center gap-3">
-                <div class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg"><i class="fas fa-warehouse"></i></div>
-                <span class="text-xl font-black italic uppercase tracking-tighter">STOCKFLOW <span class="text-indigo-400">PRO</span></span>
-            </div>
-            <nav class="p-6 flex flex-col gap-3 flex-1">
-                <button onclick="showSection('input')" id="btnInputDesk" class="p-4 rounded-2xl flex items-center gap-4 active-tab-desk transition-all">
-                    <i class="fas fa-edit"></i> <span class="font-bold text-xs uppercase tracking-widest">Input Gudang</span>
-                </button>
-                <button onclick="showSection('logs')" id="btnLogsDesk" class="p-4 rounded-2xl flex items-center gap-4 text-slate-400 hover:bg-white/5 transition-all">
-                    <i class="fas fa-history"></i> <span class="font-bold text-xs uppercase tracking-widest">Laporan Retur</span>
-                </button>
-            </nav>
-        </aside>
-
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white px-6 md:px-10 py-6 border-b flex justify-between items-center z-10 shadow-sm">
-                <div>
-                    <h2 id="sectionTitle" class="text-xl md:text-2xl font-black text-[#1b2559] uppercase tracking-tight">Input Gudang</h2>
-                </div>
-                <div class="flex gap-2">
-                    <button id="exportBtn" onclick="exportToExcel()" class="hidden bg-emerald-600 text-white p-3 md:px-6 md:py-3 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all">
-                        <i class="fas fa-file-excel"></i> <span class="hidden md:inline ml-1">Export & Hapus</span>
-                    </button>
-                    <button onclick="fetchCloudData()" class="bg-indigo-600 text-white p-3 md:px-6 md:py-3 rounded-xl font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all">
-                        <i class="fas fa-sync-alt" id="refreshIcon"></i> <span class="hidden md:inline ml-1">Sync</span>
-                    </button>
-                </div>
-            </header>
-
-            <main class="p-4 md:p-10 overflow-y-auto no-scrollbar">
-                <div id="inputPanel" class="bg-white p-6 md:p-8 rounded-[30px] shadow-sm mb-6 border border-indigo-50">
-                    <form id="warehouseForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <input type="hidden" id="wVendorHidden">
-                        <div class="md:col-span-1">
-                            <label class="text-[9px] font-black text-slate-400 uppercase ml-2">ID Barang</label>
-                            <input type="text" id="wId" onkeyup="handleAutoFill()" placeholder="Ketik ID..." class="w-full bg-slate-50 p-4 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500" required>
-                        </div>
-                        <div class="md:col-span-1">
-                            <label class="text-[9px] font-black text-slate-400 uppercase ml-2">Produk (Auto)</label>
-                            <input type="text" id="wNama" readonly placeholder="Nama produk..." class="w-full bg-slate-100 p-4 rounded-2xl font-bold text-sm outline-none text-indigo-600 cursor-not-allowed">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 md:col-span-2">
-                            <div><label class="text-[9px] font-black text-slate-400 uppercase ml-2">Qty</label>
-                            <input type="number" id="wStok" placeholder="0" class="w-full bg-slate-50 p-4 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500" required></div>
-                            <div><label class="text-[9px] font-black text-slate-400 uppercase ml-2">Exp Date</label>
-                            <input type="date" id="wExp" class="w-full bg-slate-50 p-4 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500" required></div>
-                        </div>
-                        <button type="submit" id="btnW" class="md:col-span-4 bg-[#0b1437] text-white py-5 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl hover:bg-indigo-600 transition-all">Simpan</button>
-                    </form>
-                </div>
-                <div class="mb-6 relative">
-                    <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-300"></i>
-                    <input type="text" id="adminSearch" onkeyup="renderTable()" placeholder="Cari..." class="w-full bg-white border border-slate-100 rounded-2xl py-4 pl-14 pr-6 shadow-sm font-bold text-sm outline-none">
-                </div>
-                <div id="tableContainer"></div>
-            </main>
+<body class="pb-24">
+    <header class="bg-white px-6 py-6 border-b flex justify-between items-center sticky top-0 z-50">
+        <div>
+            <h1 id="pageTitle" class="text-xl font-black text-[#1b2559] uppercase">Semua Stok</h1>
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-[2px]">Logistik Center</p>
         </div>
+        <button onclick="fetchCloudData()" class="bg-indigo-600 text-white w-10 h-10 rounded-xl flex items-center justify-center active:scale-90 transition-all">
+            <i class="fas fa-sync-alt" id="refreshIcon"></i>
+        </button>
+    </header>
 
-        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center py-4 px-6 z-50 shadow-2xl">
-            <button onclick="showSection('input')" id="btnInputMob" class="flex flex-col items-center gap-1 active-tab-mob">
-                <i class="fas fa-edit text-lg"></i> <span class="text-[10px] font-black uppercase tracking-tighter">Input</span>
-            </button>
-            <button onclick="showSection('logs')" id="btnLogsMob" class="flex flex-col items-center gap-1 text-slate-400">
-                <i class="fas fa-history text-lg"></i> <span class="text-[10px] font-black uppercase tracking-tighter">Laporan</span>
-            </button>
-        </nav>
+    <div class="p-4">
+        <input type="text" id="userSearch" onkeyup="renderTable()" placeholder="Cari nama barang..." class="w-full bg-white border border-slate-100 rounded-2xl py-4 px-6 shadow-sm font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500">
     </div>
 
-    <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbw2n9HwBuhrHd7_FWF498_bbNj1W0Fhkys9Qr2n_SXUmYgx9IK4CLT3Cufg4G8ldjEXgA/exec'; 
-        let inventoryData = [], logData = [], currentMode = 'input';
-        let masterMap = new Map();
+    <main class="px-4" id="container"></main>
 
-        const toIndoDate = (str) => { if(!str || !str.includes('-')) return str; const [y,m,d] = str.split('-'); return `${d}-${m}-${y}`; };
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center z-50 shadow-2xl">
+        <button onclick="switchTab('all')" id="tabAll" class="flex flex-col items-center gap-1 py-4 px-6 active-tab">
+            <i class="fas fa-boxes text-lg"></i> <span class="text-[10px] font-black uppercase">Semua Stok</span>
+        </button>
+        <button onclick="switchTab('pull')" id="tabPull" class="flex flex-col items-center gap-1 py-4 px-6 text-slate-400">
+            <i class="fas fa-calendar-exclamation text-lg"></i> <span class="text-[10px] font-black uppercase">Daftar Tarik</span>
+        </button>
+    </nav>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyIYZQLch3Jwf0hlS5mN7fxmO80oA-iTtru5ZhmCHWC969MNzQFOpjfBq689PSLuE1X6A/exec'; 
+        let inventoryData = [], currentTab = 'all';
+
+        function formatTglIndo(dateStr) {
+            if (!dateStr || !dateStr.includes('-')) return dateStr;
+            const bulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const bagian = dateStr.split('-');
+            return `${parseInt(bagian[0])} ${bulanIndo[parseInt(bagian[1]) - 1]} ${bagian[2]}`;
+        }
+
+        function isNearExpired(dateStr) {
+            if (!dateStr || !dateStr.includes('-')) return false;
+            const [d, m, y] = dateStr.split('-');
+            const expDate = new Date(y, m - 1, d);
+            const diffDays = Math.ceil((expDate - new Date()) / (1000 * 60 * 60 * 24));
+            return diffDays <= 90 && diffDays >= -1;
+        }
 
         async function fetchCloudData() {
             const icon = document.getElementById('refreshIcon');
-            if(icon) icon.classList.add('fa-spin');
+            icon.classList.add('fa-spin');
             try {
                 const res = await fetch(API_URL + "?t=" + Date.now());
                 const data = await res.json();
                 inventoryData = data.inventory || [];
-                logData = data.logs || [];
-                masterMap.clear();
-                (data.master || []).forEach(m => masterMap.set(String(m.item_id).trim(), m));
                 renderTable();
-            } catch (e) { console.error("Sync Error"); }
-            finally { if(icon) icon.classList.remove('fa-spin'); }
+            } catch (e) { console.error("Sync gagal"); }
+            finally { icon.classList.remove('fa-spin'); }
         }
 
-        function handleAutoFill() {
-            const id = document.getElementById('wId').value.trim();
-            const nameF = document.getElementById('wNama'), vendF = document.getElementById('wVendorHidden');
-            let match = masterMap.get(id) || inventoryData.find(i => String(i.item_id).trim() === id);
-            if(match) {
-                nameF.value = match.produk;
-                vendF.value = match.vendor || "Vendor Umum";
-                nameF.classList.replace('bg-slate-100', 'bg-emerald-50');
-            } else {
-                nameF.value = "TIDAK TERDAFTAR"; vendF.value = "";
-                nameF.classList.replace('bg-emerald-50', 'bg-slate-100');
-            }
-        }
-
-        function showSection(mode) {
-            currentMode = mode;
-            document.getElementById('sectionTitle').innerText = mode === 'input' ? "Input Gudang" : "Laporan Retur";
-            document.getElementById('inputPanel').classList.toggle('hidden', mode === 'logs');
-            document.getElementById('exportBtn').classList.toggle('hidden', mode === 'input');
-            
-            ['Desk', 'Mob'].forEach(b => {
-                document.getElementById(`btnInput${b}`).className = mode === 'input' ? (b==='Desk' ? "p-4 rounded-2xl flex items-center gap-4 active-tab-desk" : "flex flex-col items-center gap-1 active-tab-mob") : "p-4 rounded-2xl flex items-center gap-4 text-slate-400";
-                document.getElementById(`btnLogs${b}`).className = mode === 'logs' ? (b==='Desk' ? "p-4 rounded-2xl flex items-center gap-4 active-tab-desk" : "flex flex-col items-center gap-1 active-tab-mob") : "p-4 rounded-2xl flex items-center gap-4 text-slate-400";
-            });
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('pageTitle').innerText = tab === 'all' ? 'Semua Stok' : 'Daftar Tarik';
+            document.getElementById('tabAll').className = tab === 'all' ? "flex flex-col items-center gap-1 py-4 px-6 active-tab" : "flex flex-col items-center gap-1 py-4 px-6 text-slate-400";
+            document.getElementById('tabPull').className = tab === 'pull' ? "flex flex-col items-center gap-1 py-4 px-6 active-tab" : "flex flex-col items-center gap-1 py-4 px-6 text-slate-400";
             renderTable();
         }
 
         function renderTable() {
-            const container = document.getElementById('tableContainer'), q = document.getElementById('adminSearch').value.toLowerCase();
+            const container = document.getElementById('container');
+            const q = document.getElementById('userSearch').value.toLowerCase();
             container.innerHTML = "";
-            if (currentMode === 'input') {
-                const filtered = inventoryData.filter(i => (i.produk || "").toLowerCase().includes(q) || String(i.item_id).includes(q));
-                let html = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
-                filtered.forEach(i => html += `<div class="bg-white p-5 rounded-[30px] border border-slate-50 flex justify-between items-center shadow-sm"><div><p class="text-[9px] font-black text-indigo-400">#${i.item_id}</p><h4 class="font-bold text-[13px] uppercase">${i.produk}</h4><p class="text-[9px] text-slate-400 font-bold">${i.vendor}</p></div><p class="text-2xl font-black text-indigo-600">${i.stok}</p></div>`);
-                container.innerHTML = filtered.length ? html + `</div>` : `<p class="py-20 text-center text-slate-300 font-bold italic">Kosong</p>`;
-            } else {
-                const filteredLogs = logData.filter(l => (l.produk || "").toLowerCase().includes(q) && l.waktu_tarik);
-                let html = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
-                filteredLogs.forEach(l => html += `<div class="bg-white p-5 rounded-[30px] border border-rose-100 border-l-4 border-l-rose-500 shadow-sm flex justify-between items-center"><div class="flex-1"><h4 class="font-bold text-[13px] uppercase">${l.produk}</h4><p class="text-[9px] font-bold text-slate-400 uppercase">Vendor: ${l.vendor}</p><p class="text-[10px] font-bold text-rose-500 mt-2 italic">Exp: ${l.tgl_expired}</p><p class="text-[8px] text-slate-300 mt-2 uppercase italic tracking-tighter">Ditarik: ${l.waktu_tarik}</p></div><p class="text-xl font-black text-rose-400">${l.stok}</p></div>`);
-                container.innerHTML = filteredLogs.length ? html + `</div>` : `<p class="py-20 text-center text-slate-300 font-bold italic">Laporan Kosong</p>`;
-            }
+
+            let displayData = currentTab === 'pull' ? inventoryData.filter(i => isNearExpired(i.tgl_expired)) : inventoryData;
+            displayData = displayData.filter(i => (i.produk || "").toLowerCase().includes(q));
+
+            displayData.forEach(i => {
+                const isWarning = isNearExpired(i.tgl_expired);
+                container.innerHTML += `
+                <div class="bg-white p-5 rounded-[30px] shadow-sm mb-4 border ${isWarning && currentTab === 'pull' ? 'border-rose-100 border-l-4 border-l-rose-500' : 'border-slate-50'}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <p class="text-[9px] font-black text-indigo-400 uppercase">#${i.item_id}</p>
+                            <h4 class="font-bold text-[14px] uppercase text-slate-800 leading-tight">${i.produk}</h4>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mt-1">${i.vendor}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[8px] font-black text-slate-300 uppercase">Expired</p>
+                            <p class="text-[11px] font-black ${isWarning ? 'text-rose-500' : 'text-emerald-500'}">${formatTglIndo(i.tgl_expired)}</p>
+                        </div>
+                    </div>
+                    ${currentTab === 'pull' ? `
+                    <div class="flex items-end gap-3 border-t pt-4">
+                        <div class="flex-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Qty Fisik</label>
+                            <input type="number" id="qty-${i.item_id}" placeholder="0" class="w-full bg-slate-50 p-3 rounded-xl font-bold text-sm outline-none border-none">
+                        </div>
+                        <button onclick="pullItem('${i.item_id}', '${i.tgl_expired}')" class="bg-rose-500 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase active:scale-95 transition-all">Tarik</button>
+                    </div>` : ''}
+                </div>`;
+            });
         }
 
-        document.getElementById('warehouseForm').onsubmit = async (e) => {
-            e.preventDefault();
-            if(document.getElementById('wNama').value === "TIDAK TERDAFTAR") return alert("ID Salah!");
-            const btn = document.getElementById('btnW'); btn.innerText = "SIMPAN..."; btn.disabled = true;
-            const p = { action: 'ADD', item_id: document.getElementById('wId').value, produk: document.getElementById('wNama').value, stok: document.getElementById('wStok').value, vendor: document.getElementById('wVendorHidden').value, tgl_expired: toIndoDate(document.getElementById('wExp').value) };
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify(p) });
-            e.target.reset(); fetchCloudData(); btn.innerText = "Simpan"; btn.disabled = false;
-        };
-
-        async function exportToExcel() {
-            const cleanLogs = logData.filter(l => l.waktu_tarik);
-            if(!cleanLogs.length || !confirm("Download Excel & Kosongkan Laporan?")) return;
-            const dataExport = cleanLogs.map(l => ({ "ID": l.item_id, "Produk": l.produk, "Qty": l.stok, "Vendor": l.vendor, "Exp": l.tgl_expired, "Tarik": l.waktu_tarik }));
-            const ws = XLSX.utils.json_to_sheet(dataExport), wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-            XLSX.writeFile(wb, `Laporan_Retur_${Date.now()}.xlsx`);
-            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'CLEAR_LOGS' }) });
-            fetchCloudData();
+        async function pullItem(id, exp) {
+            const qtyVal = document.getElementById(`qty-${id}`).value;
+            if (!qtyVal || qtyVal <= 0) return alert("Isi jumlah fisik!");
+            if(!confirm(`Tarik ${qtyVal} pcs barang?`)) return;
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'PULL_ITEM', item_id: id, tgl_expired: exp, qty: qtyVal }) });
+                fetchCloudData();
+            } catch (e) { alert("Gagal!"); }
         }
+
         fetchCloudData();
     </script>
 </body>
